@@ -174,7 +174,7 @@ function showDots(){
 function rmDots(){const e=document.getElementById('typ');if(e)e.remove();}
 function setMood(pill,desc){document.getElementById('mpill').textContent=pill;document.getElementById('hmood').textContent=desc;}
 
-async function callAPI(retry=2){
+async function callAPI(retry=0){
   let lastErr;
   for(let i=0;i<=retry;i++){
     try{
