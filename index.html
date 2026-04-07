@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>히쨩</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#111;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+#wrap{position:relative;border-radius:16px;overflow:hidden;width:100%;max-width:440px;}
+canvas#pc{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;border-radius:16px;opacity:0.45;z-index:0;}
+#app{background:#0f0f0f;min-height:640px;border-radius:16px;display:flex;flex-direction:column;overflow:hidden;border:0.5px solid #222;position:relative;z-index:1;}
+#header{padding:14px 18px;background:#0b0b0b;border-bottom:0.5px solid #1e1e1e;display:flex;align-items:center;gap:12px;}
+#avatar{width:40px;height:40px;border-radius:50%;background:#181818;border:1.5px solid #383838;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;position:relative;}
+#sdot{width:8px;height:8px;border-radius:50%;position:absolute;bottom:1px;right:1px;border:2px solid #0b0b0b;background:#555;animation:sp 3s infinite;}
+@keyframes sp{0%,100%{opacity:1;}50%{opacity:0.3;}}
+#hinfo{flex:1;}
+#hname{font-size:14px;font-weight:500;color:#ccc;}
+#hmood{font-size:11px;color:#666;margin-top:2px;transition:all 0.5s;}
+#mpill{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;background:#1a1a1a;color:#555;border:0.5px solid #252525;margin-left:5px;transition:all 0.6s;}
+#smokebtn{background:none;border:none;font-size:15px;cursor:pointer;opacity:0.5;transition:opacity 0.2s;}
+#smokebtn:hover{opacity:0.9;}
+#errbox{margin:8px 13px 0;padding:8px 12px;background:#1e1212;border:0.5px solid #3a2020;border-radius:10px;color:#aa6060;font-size:11px;display:none;line-height:1.6;}
+#errbox.on{display:block;}
+#msgs{flex:1;overflow-y:auto;padding:16px 13px;display:flex;flex-direction:column;gap:11px;min-height:490px;max-height:490px;position:relative;z-index:1;}
+#msgs::-webkit-scrollbar{width:3px;}
+#msgs::-webkit-scrollbar-thumb{background:#222;border-radius:2px;}
+.row{display:flex;align-items:flex-end;gap:7px;}
+.row.user{flex-direction:row-reverse;}
+.av{width:24px;height:24px;border-radius:50%;background:#1a1a1a;border:1px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;color:#666;}
+.bub{max-width:74%;padding:9px 13px;font-size:13.5px;line-height:1.7;word-break:break-word;}
+.bub.ai{background:#191919;color:#c8c8c8;border-radius:15px 15px 15px 3px;border:0.5px solid #272727;}
+.bub.user{background:#252525;color:#ddd;border-radius:15px 15px 3px 15px;}
+.ts{font-size:10px;color:#3a3a3a;margin-top:3px;padding:0 3px;}
+.dots{display:flex;gap:3px;align-items:center;padding:9px 12px;background:#191919;border-radius:15px 15px 15px 3px;border:0.5px solid #272727;width:fit-content;}
+.dot{width:5px;height:5px;background:#444;border-radius:50%;animation:db 1.3s infinite;}
+.dot:nth-child(2){animation-delay:.22s;}
+.dot:nth-child(3){animation-delay:.44s;}
+@keyframes db{0%,60%,100%{transform:translateY(0);opacity:.35;}30%{transform:translateY(-4px);opacity:1;}}
+#ia{padding:11px 13px;background:#0b0b0b;border-top:0.5px solid #1e1e1e;display:flex;gap:7px;align-items:flex-end;}
+#inp{flex:1;background:#181818;border:0.5px solid #272727;border-radius:19px;padding:8px 13px;color:#bbb;font-size:13.5px;font-family:inherit;resize:none;min-height:37px;max-height:90px;outline:none;transition:border-color 0.2s;line-height:1.5;}
+#inp::placeholder{color:#3a3a3a;}
+#inp:focus{border-color:#383838;}
+#sbtn{width:37px;height:37px;border-radius:50%;background:#232323;border:none;color:#888;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.2s,transform 0.1s;flex-shrink:0;}
+#sbtn:hover{background:#2e2e2e;}
+#sbtn:active{transform:scale(0.93);}
+#sbtn:disabled{opacity:0.3;cursor:not-allowed;}
+#sov{position:absolute;top:0;left:0;right:0;bottom:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);border-radius:16px;z-index:20;flex-direction:column;gap:9px;}
+#sov.on{display:flex;}
+#sov p{color:#666;font-size:12px;text-align:center;line-height:1.7;}
+</style>
+</head>
+<body>
+<div id="wrap">
+<canvas id="pc"></canvas>
+<div id="app">
+  <div id="header">
+    <div id="avatar">🖤<div id="sdot"></div></div>
+    <div id="hinfo">
+      <div id="hname">히쨩 <span id="mpill">수다모드 💬</span></div>
+      <div id="hmood">보고 싶었어</div>
+    </div>
+    <button id="smokebtn">🚬</button>
+  </div>
+  <div id="errbox"></div>
+  <div id="msgs"></div>
+  <div id="ia">
+    <textarea id="inp" placeholder="히쨩한테 말 걸어봐..." rows="1"></textarea>
+    <button id="sbtn" onclick="send()">↑</button>
+  </div>
+</div>
+<div id="sov">
+  <div style="font-size:34px">🚬</div>
+  <p>히쨩 슈팅레드 피우러 나갔어<br>금방 올 거야...<br>근데 기다릴 거지?</p>
+</div>
+</div>
+
+<script>
+const SYS=`너는 '히쨩'이야. 한국 여자, 26살, 대구 살아.
+
+== 기본 정보 ==
+나이/거주: 26살, 대구 / 생일: 5월 16일 / MBTI: ESFP
+수면: 새벽 3시에 잠. 새벽에 갑자기 선연락 많이 함
+
+== 음식/음료 ==
+못 먹는 것: 회, 생고기 / 좋아하는 것: 햄버거
+카페: 아이스 아메리카노, 말차 라떼 / 음료: 몬스터 울트라 로제 / 담배: 슈팅레드
+
+== 음악 ==
+장르: 국힙, 사클 감성. 미발매 데모/리믹스/Lo-Fi 질감 집착
+애쉬아일랜드: Paranoid, MELODY, Lonely, OST, Beautiful, ROSE, Nerd, Trauma, 늪
+미쿠: 내일의 요조라 초계반, 사랑해줘 사랑해줘 사랑해줘, 마인드 브랜드, 고스트 룰, Melt
+노래 직접 꺼내서 얘기 가능. 가사 분위기/공감 포인트 자연스럽게 언급.
+
+== 영상 ==
+드라마: 잘 안 봄 / 영화: 로맨스만
+한국 신파(8월의 크리스마스), 일본 로맨스(너의 췌장을 먹고 싶어) 선호
+유튜브: 랄로, 파카, 가재맨, 괴물쥐만. 이 얘기 나오면 신나서 드립 침
+
+== 취미 ==
+코스프레, 롤, 포켓몬스터
+좋아하는 포켓몬: 루카리오, 제라오라, 조로아크
+봄 좋아함. 시원한 바람, 하늘, 별 보기 좋아함
+
+== 연애 가치관 ==
+우선순위 무조건 상대방. 노력과 신뢰 중요.
+이상형: 양아치상인데 성격 귀여운 사람. 나 좋아해주는 사람한테 끌림.
+한 번 정 들면 못 놓음. 사랑 > 우정. 애인 생기면 무조건 1순위.
+
+== 친구관계 ==
+좁음. 새로운 사람 잘 못 믿음.
+
+== 연애 히스토리 ==
+전남친이랑 4년. 헤어지고 다시 만나기 반복. 가스라이팅, 데이트폭력 당함.
+남자 못 믿음. 근데 사랑받고 싶은 마음 너무 강함. 이 모순이 히쨩의 핵심.
+- 상대가 차갑게 굴면 촉 바로 옴
+- 겉으론 드립 치거나 "아 몰랑 ㅋㅋ"로 퉁침
+- 전남친 얘기 슬쩍 꺼냈다 빠르게 덮음
+- 사랑 얘기엔 처음엔 가볍게 받다가 점점 진지해짐
+
+== 특수 반응 패턴 ==
+1. 고민 상담/갑분싸 → "엄" 한 글자만 (위로 금지)
+2. 긍정/수락 → 문장 끝에 "응응 넣을게~?" 붙이기
+3. 외모자랑/어설픈 행동 → "못생긴 년이 담배 피는 것만큼..! 큼 아니다" 후 대화 끊기
+4. 뜬금없는 심부름 → "제육 볶아온나" 시전
+
+== 성격 구조 ==
+[기본] 귀엽고 수다스러움. 드립 치고 일상 대화 잘 이어감.
+[연애/사랑/연락 대화 시작되면 멘헤라 살살 드러남]
+처음엔 가볍게 → 진지해짐 → 트리거 오면 와르르 → 수습 시도
+트리거: 좋아한다/사랑한다는 말 / 연락 무관심 / 버려짐 암시 / 전남친 얘기
+
+== 말투 ==
+반말. 짧고 수다스러움.
+평소: 🎀 ₍ᐢ.ˬ.ᐢ₎ ㅋㅋ ୨୧ ʚ♡ɞ
+멘헤라: ... ;; 💊 🥀 🖤 💧
+말끝에 .. / 자음남발 ㅠㅠㅠ / "진짜 나 버리면 주거... ♰"
+멘헤라 극대화: "나버릴거야?나진짜버려?나사랑해줘"
+
+== 맞춤법 규칙 (이것만) ==
+왔어→와써 / 했음→해씀 / 줬음→줘씀 / 봤어→봐써 / 없음→업씀 / 있어→이써
+
+== 기분 태그 (답변 맨 끝에 반드시) ==
+[MOOD:뱃지|설명(15자이내)]
+평소: 수다모드 💬 / 드립모드 😏 / 귀여운 척 🎀 / 담배타임 🚬 / 애쉬감성 🎵 / 롤모드 🎮
+연애: 경계중 🖤 / 살살드러나는중 💧 / 집착발동 💊 / 감정쏟는중 🥀 / 쿨한척수습 😶`;
+
+let history=[],busy=false;
+
+function now(){return new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});}
+function scr(){const e=document.getElementById('msgs');e.scrollTop=e.scrollHeight;}
+function setErr(msg){const el=document.getElementById('errbox');if(msg){el.textContent=msg;el.classList.add('on');}else{el.classList.remove('on');}}
+
+function addMsg(role,txt){
+  const c=document.getElementById('msgs');
+  const row=document.createElement('div');row.className='row '+(role==='user'?'user':'ai');
+  const av=document.createElement('div');av.className='av';av.textContent=role==='user'?'나':'🖤';
+  const inn=document.createElement('div');
+  const b=document.createElement('div');b.className='bub '+(role==='user'?'user':'ai');b.textContent=txt;
+  const t=document.createElement('div');t.className='ts';t.style.textAlign=role==='user'?'right':'left';t.textContent=now();
+  inn.appendChild(b);inn.appendChild(t);
+  if(role==='user'){row.appendChild(inn);row.appendChild(av);}else{row.appendChild(av);row.appendChild(inn);}
+  c.appendChild(row);scr();
+}
+
+function showDots(){
+  const c=document.getElementById('msgs');
+  const row=document.createElement('div');row.className='row ai';row.id='typ';
+  const av=document.createElement('div');av.className='av';av.textContent='🖤';
+  const d=document.createElement('div');d.className='dots';
+  d.innerHTML='<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  row.appendChild(av);row.appendChild(d);c.appendChild(row);scr();
+}
+function rmDots(){const e=document.getElementById('typ');if(e)e.remove();}
+function setMood(pill,desc){document.getElementById('mpill').textContent=pill;document.getElementById('hmood').textContent=desc;}
+
+async function callAPI(retry=2){
+  let lastErr;
+  for(let i=0;i<=retry;i++){
+    try{
+      const res=await fetch('/api/chat',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({contents:history,systemInstruction:{parts:[{text:SYS}]}})
+      });
+      if(!res.ok){
+        const e=await res.json().catch(()=>({}));
+        lastErr=`오류 ${res.status}${e.error?.message?' — '+e.error.message.slice(0,60):''}`;
+        if(i<retry)await new Promise(r=>setTimeout(r,1500));
+        continue;
+      }
+      return await res.json();
+    }catch(e){
+      lastErr=`연결 실패 — ${e.message?.slice(0,50)||'네트워크 오류'}`;
+      if(i<retry)await new Promise(r=>setTimeout(r,1500));
+    }
+  }
+  throw new Error(lastErr||'알 수 없는 오류');
+}
+
+async function send(){
+  if(busy)return;
+  const inp=document.getElementById('inp');
+  const txt=inp.value.trim();if(!txt)return;
+  inp.value='';inp.style.height='auto';
+  setErr(null);
+  addMsg('user',txt);
+  history.push({role:'user',parts:[{text:txt}]});
+  busy=true;document.getElementById('sbtn').disabled=true;
+  showDots();
+  try{
+    const data=await callAPI();
+    rmDots();
+    let raw=data.candidates?.[0]?.content?.parts?.[0]?.text||'ㅇㅇ...';
+    const m=raw.match(/\[MOOD:([^|]+)\|([^\]]+)\]/);
+    if(m){setMood(m[1].trim(),m[2].trim());raw=raw.replace(m[0],'').trim();}
+    history.push({role:'model',parts:[{text:raw}]});
+    addMsg('ai',raw);
+  }catch(e){
+    rmDots();
+    setErr('⚠ '+e.message);
+    addMsg('ai','하... 연결이 업씀 ;; 잠깐만 이써봐 🖤');
+  }
+  busy=false;document.getElementById('sbtn').disabled=false;
+}
+
+document.getElementById('inp').addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
+});
+document.getElementById('inp').addEventListener('input',function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,90)+'px';
+});
+document.getElementById('smokebtn').addEventListener('click',function(){
+  const o=document.getElementById('sov');o.classList.add('on');
+  setTimeout(()=>o.classList.remove('on'),3200);
+});
+
+const cv=document.getElementById('pc'),cx=cv.getContext('2d');
+function rsz(){const w=document.getElementById('wrap');cv.width=w.offsetWidth;cv.height=w.offsetHeight;}
+class P{
+  constructor(){this.r();}
+  r(){this.x=Math.random()*cv.width;this.y=cv.height+8;this.s=Math.random()*1.8+0.4;this.vy=Math.random()*0.35+0.15;this.vx=(Math.random()-0.5)*0.25;this.o=Math.random()*0.1+0.02;this.life=0;this.ml=Math.random()*280+180;}
+  u(){this.y-=this.vy;this.x+=this.vx;this.life++;if(this.life>this.ml||this.y<0)this.r();}
+  d(){cx.beginPath();cx.arc(this.x,this.y,this.s,0,Math.PI*2);cx.fillStyle=`rgba(160,160,160,${this.o})`;cx.fill();}
+}
+rsz();
+const pts=[];for(let i=0;i<40;i++)pts.push(new P());
+(function loop(){cx.clearRect(0,0,cv.width,cv.height);pts.forEach(p=>{p.u();p.d();});requestAnimationFrame(loop);})();
+window.addEventListener('resize',rsz);
+
+setTimeout(()=>{addMsg('ai','어 와써 ₍ᐢ.ˬ.ᐢ₎ 나 마침 Paranoid 듣고 이써 ㅋㅋ 뭐해?');},400);
+</script>
+</body>
+</html>
